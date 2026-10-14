@@ -1,0 +1,21 @@
+{
+  "name": "@concentrate/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Concentrate AI: one key for every coding agent",
+  "type": "module",
+  "bin": {
+    "cn": "./bin/cn.mjs"
+  },
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "Apache-2.0"
+}
