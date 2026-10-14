@@ -6,14 +6,16 @@ v0 covers the terminal tools: **Claude Code, Codex CLI, OpenCode, Pi**.
 
 ## Install
 
-Needs Node.js 18+ and bash. No npm dependencies.
+Needs Node.js 18+. No npm packages.
 
 ```sh
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/AjayK47/concentrateai-cli/main/install.sh | bash
 cn
 ```
 
-The installer copies the package to `~/.local/share/concentrate-cli/` and writes a `cn` launcher into `~/.local/bin/`. The launcher records the absolute path of the Node it was installed with. It will not overwrite a different `cn` already on that path.
+Or from a clone: `./install.sh`. Set `CN_INSTALL_REF` to install a specific branch or tag.
+
+The installer copies the package to `~/.local/share/concentrate-cli/` and writes a `cn` launcher into `~/.local/bin/`. The launcher records the absolute path of the Node it was installed with. It will not overwrite a different `cn` already on that path. Running the installer again updates `cn` in place.
 
 ## First run
 

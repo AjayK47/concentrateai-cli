@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
-# Installs the Concentrate AI CLI (`cn`) from this directory. Needs Node.js 18+.
-# There are no npm dependencies, so nothing is downloaded.
+# Installs the Concentrate AI CLI (`cn`). Needs Node.js 18+, and no npm packages.
+#   From a checkout:   ./install.sh
+#   From the web:      curl -fsSL https://raw.githubusercontent.com/AjayK47/concentrateai-cli/main/install.sh | bash
+# Piped from the web, it downloads the package from GitHub first. CN_INSTALL_REF
+# picks a branch or tag (default: main).
 set -euo pipefail
 
 MIN_NODE_MAJOR=18
-package_dir="$(CDPATH= cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="AjayK47/concentrateai-cli"
+REF="${CN_INSTALL_REF:-main}"
+script_dir=""
+if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+  script_dir="$(CDPATH= cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+package_dir=""
 install_dir="${XDG_DATA_HOME:-$HOME/.local/share}/concentrate-cli"
 bin_dir="$HOME/.local/bin"
 launcher="$bin_dir/cn"
@@ -53,8 +62,36 @@ check_launcher() {
   fi
 }
 
+# Use the files next to this script, or fetch the package when piped from the web.
+locate_package() {
+  if [[ -n "$script_dir" && -f "$script_dir/bin/cn.mjs" ]]; then
+    package_dir="$script_dir"
+    return
+  fi
+  if [[ ! "$REF" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+    echo "CN_INSTALL_REF has unexpected characters: $REF" >&2
+    exit 1
+  fi
+  for tool in curl tar; do
+    command -v "$tool" >/dev/null 2>&1 || { echo "Missing required command: $tool" >&2; exit 1; }
+  done
+  download_dir="$(mktemp -d)"
+  trap 'rm -rf "$download_dir"' EXIT
+  echo "Downloading Concentrate AI CLI ($REF)..."
+  if ! curl -fsSL "https://codeload.github.com/$REPO/tar.gz/$REF" | tar -xz -C "$download_dir" --strip-components 1; then
+    echo "Could not download $REPO at $REF." >&2
+    exit 1
+  fi
+  if [[ ! -f "$download_dir/bin/cn.mjs" ]]; then
+    echo "The download did not contain the Concentrate AI CLI." >&2
+    exit 1
+  fi
+  package_dir="$download_dir"
+}
+
 ensure_node
 check_launcher
+locate_package
 
 node_bin="$(command -v node)"
 rm -rf "$install_dir"
@@ -83,7 +120,7 @@ chmod 755 "$launcher"
 
 printf '\nInstalled Concentrate AI at %s\n' "$launcher"
 case ":$PATH:" in
-  *":$bin_dir:"*) printf 'Run: cn setup\n' ;;
+  *":$bin_dir:"*) printf 'Run: cn\n' ;;
   *)
     case "${SHELL:-}" in
       */zsh) rc_file="$HOME/.zshrc" ;;
@@ -91,6 +128,6 @@ case ":$PATH:" in
       *) rc_file="your shell startup file" ;;
     esac
     printf 'Add this line to %s:\n  export PATH="$HOME/.local/bin:$PATH"\n' "$rc_file"
-    printf 'Then open a new terminal and run: cn setup\n'
+    printf 'Then open a new terminal and run: cn\n'
     ;;
 esac
